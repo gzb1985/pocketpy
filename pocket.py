@@ -17,9 +17,6 @@ import requests
 
 
 class APIError(StandardError):
-    '''
-    raise APIError if failure.
-    '''
     def __init__(self, status_code, x_error_code, x_error, request):
         self.status_code = status_code
         self.x_error_code = x_error_code
@@ -36,9 +33,9 @@ class APIError(StandardError):
             % (self.status_code, self.x_error_code, self.x_error, self.request)
 
 POCKET_URLs = {
-	'request_token':   'https://getpocket.com/v3/oauth/request',
+    'request_token': 'https://getpocket.com/v3/oauth/request',
     'authorize_token': 'https://getpocket.com/auth/authorize?request_token=%(request_token)s&redirect_uri=%(redirect_uri)s',
-    'access_token':    'https://getpocket.com/v3/oauth/authorize'
+    'access_token': 'https://getpocket.com/v3/oauth/authorize'
 }
 POCKET_HEADERS = {
     'Content-Type': 'application/json; charset=UTF-8',
@@ -54,11 +51,11 @@ class Pocket(object):
         self.redirect_uri = redirect_uri
         self.access_token = None
 
-    def _post(self, method_url, params):
+    def _post(self, method_url, **kw):
         '''
         make a http post.
         '''
-        resp = requests.post(method_url, data=json.dumps(params), headers=POCKET_HEADERS)
+        resp = requests.post(method_url, data=json.dumps(kw), headers=POCKET_HEADERS)
         if resp.status_code != 200:
             raise APIError(resp.status_code, resp.headers['X-Error-Code'], resp.headers['X-Error'], 'Get access token')
         return json.loads(resp.content)
@@ -69,20 +66,16 @@ class Pocket(object):
         '''
         kw['consumer_key'] = self.consumer_key
         kw['access_token'] = self.access_token
-        return self._post(method_url, kw)
+        return self._post(method_url,**kw)
 
     def get_request_token(self):
-    	'''
-    	return request token (the "code" in the response). 
-    	This request token must be stored for use in request access token step. 
-    	For web applications, it should be associated with the user's session or other persistent state.
-    	'''
-        params = {
-            'consumer_key': self.consumer_key,
-            'redirect_uri': 'is-this-even-used',
-            'state': 'foo'
-        }
-        resp = self._post(POCKET_URLs['request_token'], params)
+        '''
+        return request token (the "code" in the response). 
+        This request token must be stored for use in request access token step. 
+        For web applications, it should be associated with the user's session or other persistent state.
+        '''
+        resp = self._post(POCKET_URLs['request_token'], consumer_key=self.consumer_key, 
+            redirect_uri='is-this-even-used', state='foo')
         return resp['code']
 
     def get_authorize_url(self, code):
@@ -101,11 +94,7 @@ class Pocket(object):
         '''
         return access token as a dict: {"access_token":"5678defg-5678-defg-5678-defg56","username":"pocketuser"}.
         '''
-        params = {
-            'consumer_key': self.consumer_key,
-            'code': code
-        }
-        resp = self._post(POCKET_URLs['access_token'], params)
+        resp = self._post(POCKET_URLs['access_token'], consumer_key=self.consumer_key, code=code)
         self.access_token = resp['access_token']
         return resp
 
