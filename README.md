@@ -26,7 +26,7 @@ A python wrapper for [Pocket API v3](http://getpocket.com/developer/docs/overvie
 		except APIError as apie:
 			return str(apie)
 		session.pop('code', None)
-		session['code'] = code # store request code (code) for getting access code
+		session['code'] = code # store request token (code) for getting access token
 		return redirect(url)
 
 	@app.route('/auth_callback')
@@ -35,8 +35,8 @@ A python wrapper for [Pocket API v3](http://getpocket.com/developer/docs/overvie
 		code = session['code']
 		try:
 			resp = pocket.get_access_token(code)
-			session.pop('access_code', None)
-			session['access_code'] = resp['access_code'] #store access code in session for api call
+			session.pop('access_token', None)
+			session['access_token'] = resp['access_token'] #store access token in session for api call
 		except APIError as apie:
 			return str(apie)
 
@@ -45,7 +45,7 @@ A python wrapper for [Pocket API v3](http://getpocket.com/developer/docs/overvie
 First, 
 
 	pocket = Pocket(POCKET_CONSUMER_KEY)
-	pocket.set_access_token(session['access_code'])
+	pocket.set_access_token(session['access_token'])
 
 For example, retrieving first five favorited and archived items from Pocket list.
 	
